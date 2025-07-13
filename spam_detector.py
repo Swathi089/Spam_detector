@@ -59,3 +59,37 @@ print("\n📩 New Email Prediction Test:")
 sample_email = "Congratulations! You've won a free ticket. Click here to claim it now!"
 print("Message:", sample_email)
 print("Prediction:", predict_spam(sample_email))
+
+import joblib
+
+# Save model and vectorizer
+joblib.dump(model, "spam_model.pkl")
+joblib.dump(vectorizer, "vectorizer.pkl")
+
+# spam_detector.py (updated for live use)
+
+import joblib
+import string
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+
+nltk.download('stopwords')
+
+# Load pre-trained model and vectorizer
+model = joblib.load('spam_model.pkl')
+vectorizer = joblib.load('vectorizer.pkl')
+
+def preprocess_text(text):
+    text = text.lower()
+    text = ''.join([char for char in text if char not in string.punctuation])
+    words = text.split()
+    stemmer = PorterStemmer()
+    clean_words = [stemmer.stem(word) for word in words if word not in stopwords.words('english')]
+    return ' '.join(clean_words)
+
+def predict_spam(email):
+    email_clean = preprocess_text(email)
+    email_vector = vectorizer.transform([email_clean])
+    prediction = model.predict(email_vector)[0]
+    return "Spam" if prediction == 1 else "Not Spam"
